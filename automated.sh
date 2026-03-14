@@ -12,6 +12,12 @@ scrapy crawl MyJobMag -s JOBDIR=crawls/MyJobMag &
 echo "Starting summitRecruitment..."
 scrapy crawl summitRecruitment -s JOBDIR=crawls/summitRecruitment &
 
+echo "Starting reliefweb..."
+scrapy crawl reliefweb -s JOBDIR=crawls/reliefweb &
+
+echo "Starting kenyajob..."
+scrapy crawl kenyajob -s JOBDIR=crawls/kenyajob &
+
 # Wait for all background jobs to finish
 wait
 
