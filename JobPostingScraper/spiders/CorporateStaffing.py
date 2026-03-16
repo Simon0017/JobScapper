@@ -29,5 +29,7 @@ class CorporatestaffingSpider(scrapy.Spider):
         loader.add_value("posted_by","Corporate Staffing Services")
         loader.add_xpath("title",'//*[@id="post-274585"]/div/header/h1/text()')
         loader.add_xpath('field','//*[@id="main"]/div[1]/span/span[3]/a/text()')
-        loader.add_xpath('minimum_requirements','/html/body/div[1]/main/div/div/div/div[2]/article/div/div/ul/li/text()')
+        loader.add_xpath('minimum_requirements','/html/body/div[1]/main/div/div/div/div[2]/article/div/div/ul[2]/li/text()')
+        loader.add_xpath("responsibilities",'/html/body/div[1]/main/div/div/div/div[2]/article/div/div/ul[1]/li/text()')
+        loader.add_value('application_method',"FOLLOW THE SITES URL TO APPLY")
         yield loader.load_item()

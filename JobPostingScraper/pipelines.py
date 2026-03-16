@@ -159,6 +159,7 @@ class PostgreSQLDatabasePipeline:
             type TEXT,
             application_method TEXT,
             location TEXT,
+            crawled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
             -- constraint preventing duplicate job postings
             CONSTRAINT unique_job_post UNIQUE (posted_by, title)

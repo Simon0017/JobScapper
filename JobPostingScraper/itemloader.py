@@ -1,18 +1,18 @@
 from scrapy.loader import ItemLoader
 from itemloaders.processors import TakeFirst,MapCompose,Join,Identity
 import w3lib.html
-from datetime import datetime
 from rapidfuzz import process
-
+import datefinder
 
 def parse_date(value):
     value = value.strip()
-    for fmt in ("%B %d, %Y", "%d/%m/%Y", "%Y-%m-%d"):
-        try:
-            return datetime.strptime(value, fmt)
-        except ValueError:
-            continue
-    return None 
+    try:
+        matches  = list(datefinder.find_dates(value))
+        if matches:
+            match_datetime = matches[0]
+            return str(match_datetime)
+    except:
+        return value
 
 
 def parse_job_type(value:str):
