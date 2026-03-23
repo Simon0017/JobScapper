@@ -15,6 +15,10 @@ from psycopg2 import sql
 from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 import os
+import datefinder
+from datetime import datetime
+from scrapy.exceptions import DropItem
+from rapidfuzz import fuzz
 
 class JobpostingscraperPipeline:
     """Cleaning of data not captured by the itemloader"""
@@ -24,6 +28,20 @@ class JobpostingscraperPipeline:
                 item[key] = [val.strip() for val in value if val.strip()]
             elif isinstance(value, str):
                 item[key] = value.strip()
+        
+        # removing old-dated postings/expired
+        application_deadline = str(item.get("application_deadline",""))
+        threshold = 90
+        if fuzz.ratio("Expired",application_deadline) > threshold:
+            raise DropItem("Job posting expired")
+
+        date_matches = list(datefinder.find_dates(application_deadline))
+        if date_matches:
+            deadline_parsed = date_matches[0].replace(tzinfo=None)
+            if deadline_parsed > datetime.now():
+                raise DropItem("Job posting expired")
+        
+        
         return item
 
 

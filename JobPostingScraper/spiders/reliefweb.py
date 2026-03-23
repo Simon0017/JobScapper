@@ -38,7 +38,7 @@ class ReliefwebSpider(scrapy.Spider):
         loader.add_xpath('minimum_requirements','//*[@id="main-content"]/div/div/div/article/div/ul[1]/li/text()')
         loader.add_xpath('responsibilities','//*[@id="main-content"]/div/div/div/article/div/ol/li/ul/li/text()')
         loader.add_xpath('type','//*[@id="details"]/dl/dd[3]/ul/li/a/text()')
-        loader.add_xpath('location','//*[@id="main-content"]/div/div/div/article/div/p[2]/text()')
+        loader.add_xpath('location','//*[@id="details"]/dl/dd[1]/ul/li/a/text()')
         loader.add_xpath('application_method','//*[@id="main-content"]/div/div/div/article/div/section/p/text()')
 
         yield loader.load_item()
