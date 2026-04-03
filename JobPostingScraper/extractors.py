@@ -1,9 +1,10 @@
 import spacy
-from sqlalchemy import create_engine,select,MetaData,Table,update
+from sqlalchemy import create_engine,select,MetaData,Table,update,or_,func
 from sqlalchemy.ext.declarative import declarative_base
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+import threading
 
 NLP = spacy.load("en_core_web_lg")
 load_dotenv()
@@ -24,9 +25,43 @@ class LocationExtractor:
         pass
     
     def fetch_db_data(self):
-        query = select(job_table)
+        # some data have long locations names which is not ideal so we fetch the location as well and filter it out
+        query = select(
+            job_table.c.title,
+            job_table.c.location,
+            job_table.c.id
+        ).where(
+            or_(
+                job_table.c.location.is_(None),
+                func.length(job_table.c.location) > 50
+            )
+        )
 
+        with engine.connect() as conn:
+            results = conn.execute(query).mappings().all()
+            return [(str(row["title"]) + str(row["location"]),row["id"]) for row in results]
+        
+    def extract_location(self,text):
+        doc = NLP(text)
+        locations = []
+        for ent in doc.ents:
+            if ent.label_ in ["GPE","LOC"]:
+                locations.append(ent.text)
+        
+        if locations:
+            return ", ".join(locations)
+        else:
+            return None
+    
+    def update_table(self,data:tuple):
+        stmt = (
+            update(job_table)
+            .where(job_table.c.id==data[1])
+            .values(location=data[2])
+        )
 
+        with engine.connect() as conn:
+            conn.execute(stmt)
 
 class CompanyExtractor:
     '''Extracts company from text and saves to db'''
@@ -35,7 +70,7 @@ class CompanyExtractor:
         pass
     
     def fetch_titles_db(self):
-        query = select(job_table.c.title).where(job_table.c.location.is_(None))
+        query = select(job_table.c.title).where(job_table.c.company.is_(None))
 
         with engine.connect() as conn:
             results = conn.execute(query).mappings().all()
@@ -78,5 +113,25 @@ def company_pipeline():
             continue
 
 
+def location_pipeline():
+    loc_obj = LocationExtractor()
+    data = loc_obj.fetch_db_data()
+    for item in data:
+        print(f'[Location extractor] ---{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} ---{item[0]}...')
+        location = loc_obj.extract_location(item[0])
+        if location:
+            print(f"[+] Found the location...{location}")
+            db_data = (item[0],item[1],location)
+            loc_obj.update_table(db_data)
+        else:
+            continue
+
+
 if __name__ == "__main__":
-    company_pipeline()
+    # running both pipelines in parallel since they are independent of each other and it will save time
+    t1 = threading.Thread(target=company_pipeline)
+    t2 = threading.Thread(target=location_pipeline)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
