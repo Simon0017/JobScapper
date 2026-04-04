@@ -76,9 +76,11 @@ FAKEUSERAGENT_PROVIDERS = [
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
+EXTENSIONS = {
 #    "scrapy.extensions.telnet.TelnetConsole": None,
-#}
+    "JobPostingScraper.extensions.SaveStatsExtension":500,
+    "JobPostingScraper.extensions.FileAndConsoleLogging": 100,  # ← load early
+}
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
@@ -111,4 +113,8 @@ ITEM_PIPELINES = {
 # Set settings whose default value is deprecated to a future-proof value
 FEED_EXPORT_ENCODING = "utf-8"
 
-# LOG_LEVEL = "INFO"
+LOG_LEVEL = "INFO"                 
+LOG_FILE = "jobscraper.log"     
+LOG_FORMAT = "%(asctime)s [%(name)s] %(levelname)s: %(message)s"
+LOG_DATEFORMAT = "%Y-%m-%d %H:%M:%S"
+LOG_ENCODING = "utf-8"

@@ -7,7 +7,7 @@ import datefinder
 def parse_date(value):
     value = value.strip()
     try:
-        matches  = list(datefinder.find_dates(value))
+        matches  = list(datefinder.find_dates(value,strict=True))
         if matches:
             match_datetime = matches[0]
             return str(match_datetime)
