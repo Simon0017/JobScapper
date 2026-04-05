@@ -17,13 +17,21 @@ class ReliefwebSpider(scrapy.Spider):
             yield response.follow(link,callback=self.parse_jobs)
 
         # horizontal crawling
-        page_links = response.xpath("//*[@id='main-content']/div/div/div/section/nav/ul/li/a/@href").getall()
-        page_no = [link.split("=")[-1] for link in page_links]
-        page_no_ints = list(map(lambda x:int(x),page_no))
-        self.current_page += 1
-        if self.current_page in page_no_ints:
-            url  = f"https://reliefweb.int/jobs?list=Kenya&page={self.current_page}"
-            yield response.follow(url,callback=self.parse)
+        next_page = response.xpath("//*[@id='main-content']/div/div/div/section/nav/ul/li/a[contains(@rel,'next')]/@href").get()
+        if next_page is not None:
+            next_url = f"/jobs{next_page}"
+            print(f"Crawling to url: {next_url}")
+            yield response.follow(next_url,callback=self.parse)
+        else:  # for robustness  the site keeps closing us out
+            page_links = response.xpath("//*[@id='main-content']/div/div/div/section/nav/ul/li/a/@href").getall()
+            page_no = [link.split("=")[-1] for link in page_links]
+            page_no_ints = list(map(lambda x:int(x),page_no))
+            self.current_page += 1
+            if self.current_page in page_no_ints:
+                url  = f"https://reliefweb.int/jobs?list=Kenya&page={self.current_page}"
+                print(f"Crawling to url: {url}")
+                yield response.follow(url,callback=self.parse)
+
     
 
     def parse_jobs(self,response):
